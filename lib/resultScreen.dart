@@ -1,9 +1,12 @@
 import 'package:diplooajil/ButtonScreen.dart';
-// import 'package:diplooajil/SpeedTypingScreen.dart';
+import 'package:diplooajil/SpeedTypingScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:math';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'include.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,9 +34,56 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  String _selectedLanguage = "English (en)";
-  int _selectedTime = 60;
+  String _selectedLanguage = "en";
+  String _selectedGameMode = "Easy";
+  List<int> _availableMinutes = [];
+  int? _selectedMinute;
   List<bool> _isSelectedGameMode = [true, false, false];
+  List<dynamic> languageSummary = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchLanguageSummary();
+  }
+
+  Future<void> fetchLanguageSummary() async {
+    try {
+      final response =
+          await http.get(Uri.parse('${baseurl}text/languages-summary/'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          languageSummary = json.decode(response.body);
+          print('Language Summary: $languageSummary'); // For debugging
+        });
+      } else {
+        print('Failed to load language summary: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching language summary: $e');
+    }
+  }
+
+  void _updateAvailableMinutes() {
+    if (languageSummary.isEmpty) return;
+
+    var selectedLangData = languageSummary.firstWhere(
+      (lang) => lang['lang_code'] == _selectedLanguage,
+      orElse: () => null,
+    );
+
+    if (selectedLangData != null) {
+      var minutes = selectedLangData['minutes'][_selectedGameMode] ?? [];
+      setState(() {
+        _availableMinutes = List<int>.from(minutes);
+        if (!_availableMinutes.contains(_selectedMinute)) {
+          _selectedMinute =
+              _availableMinutes.isNotEmpty ? _availableMinutes[0] : null;
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,51 +100,65 @@ class _ResultScreenState extends State<ResultScreen> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          _background(),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 20),
-                  Text(
-                    'Speed Typing! 🎉',
-                    style: GoogleFonts.pacifico(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(color: Colors.purpleAccent, blurRadius: 10),
-                      ],
-                    ),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            _background(),
+            SafeArea(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 16.0,
+                    right: 16.0,
+                    top: 16.0,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
                   ),
-                  SizedBox(height: 16),
-                  _glassmorphicCard(),
-                  SizedBox(height: 20),
-                  Text(
-                    'Next Game Mode',
-                    style: GoogleFonts.merriweather(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(color: Colors.purpleAccent, blurRadius: 10),
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 20),
+                      Text(
+                        'Speed Typing! 🎉',
+                        style: GoogleFonts.pacifico(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(color: Colors.purpleAccent, blurRadius: 10),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Text(
+                        'Next Game Mode',
+                        style: GoogleFonts.merriweather(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(color: Colors.purpleAccent, blurRadius: 10),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _gameModeSelection(),
+                      const SizedBox(height: 40),
+                      _glassmorphicCard(languageSummary),
+                      const SizedBox(height: 40),
+                      _actionButtons(),
+                      const SizedBox(height: 20), // Add extra padding at bottom
+                    ],
                   ),
-                  SizedBox(height: 12),
-                  _gameModeSelection(),
-                  SizedBox(height: 40),
-                  _actionButtons(),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+      resizeToAvoidBottomInset: true,
     );
   }
 
@@ -147,14 +211,12 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  Widget _glassmorphicCard() {
+  Widget _glassmorphicCard(List<dynamic> languageSummary) {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: Colors.white.withOpacity(0.3),
         borderRadius: BorderRadius.circular(25),
-        // ignore: deprecated_member_use
         border: Border.all(color: Colors.white.withOpacity(0.4)),
       ),
       child: Column(
@@ -168,30 +230,38 @@ class _ResultScreenState extends State<ResultScreen> {
               value: _selectedLanguage,
               dropdownColor: Colors.grey[900],
               style: TextStyle(color: Colors.white),
-              items: ["English (en)", "Монгол (mn)"].map((String lang) {
-                return DropdownMenuItem(value: lang, child: Text(lang));
+              items: languageSummary.map<DropdownMenuItem<String>>((lang) {
+                return DropdownMenuItem<String>(
+                  value: lang['lang_code'],
+                  child: Text("${lang['lang_name']} (${lang['lang_code']})"),
+                );
               }).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedLanguage = value!;
+                  _updateAvailableMinutes();
                 });
               },
             ),
           ),
           ListTile(
             title: Text(
-              "Game Time",
+              "Available Minutes",
               style: GoogleFonts.pacifico(fontSize: 22, color: Colors.white),
             ),
             trailing: DropdownButton<int>(
-              value: _selectedTime,
-              items: [60, 180, 300, 600].map((int time) {
+              value: _selectedMinute,
+              dropdownColor: Colors.grey[900],
+              style: TextStyle(color: Colors.white),
+              items: _availableMinutes.map((int minutes) {
                 return DropdownMenuItem(
-                    value: time, child: Text("${time ~/ 60} min"));
+                  value: minutes,
+                  child: Text("$minutes min"),
+                );
               }).toList(),
               onChanged: (value) {
                 setState(() {
-                  _selectedTime = value!;
+                  _selectedMinute = value;
                 });
               },
             ),
@@ -228,6 +298,8 @@ class _ResultScreenState extends State<ResultScreen> {
             for (int i = 0; i < _isSelectedGameMode.length; i++) {
               _isSelectedGameMode[i] = i == index;
             }
+            _selectedGameMode = ['Easy', 'Medium', 'Hard'][index];
+            _updateAvailableMinutes();
           });
         },
       ),
@@ -252,27 +324,50 @@ class _ResultScreenState extends State<ResultScreen> {
     return Column(
       children: [
         ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.greenAccent,
-    minimumSize: Size(double.infinity, 60),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  ),
-  onPressed: () {
-    // Navigate to ButtonScreen first to keep the bottom navigation bar
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => ButtonScreen()),
-    );
-  },
-  child: Text(
-    'Play Again',
-    style: GoogleFonts.poppins(
-      color: Colors.black,
-      fontWeight: FontWeight.bold,
-      fontSize: 18,
-    ),
-  ),
-)
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.greenAccent,
+            minimumSize: Size(double.infinity, 60),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () {
+            if (_selectedMinute != null) {
+              Navigator.of(context).push(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      SpeedTypingScreen(
+                    langCode: _selectedLanguage,
+                    level: _selectedGameMode,
+                    minutes: _selectedMinute!,
+                  ),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                  },
+                  transitionDuration: Duration(milliseconds: 300),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Please select available minutes for the game'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          child: Text(
+            'Start Challenge',
+            style: GoogleFonts.poppins(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        )
       ],
     );
   }

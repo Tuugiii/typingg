@@ -1,5 +1,3 @@
-import 'package:diplooajil/SpeedTypingScreen.dart';
-// import 'package:diplooajil/StatisticsScreen.dart';
 import 'package:diplooajil/TypingScoreScreen.dart';
 import 'package:diplooajil/UserHistoryScreen.dart';
 import 'package:diplooajil/resultScreen.dart';
@@ -12,12 +10,10 @@ class ButtonScreen extends StatefulWidget {
 }
 
 class _ButtonScreenState extends State<ButtonScreen> {
-  int _selectedIndex = 1; // Default to SpeedTypingScreen
+  int _selectedIndex = 0; // Default to ResultScreen
 
   final List<Widget> _screens = [
-    // Empty container for home screen, can be customized to show ResultScreen
-    ResultScreen(), // Home screen showing ResultScreen
-    SpeedTypingScreen(),
+    ResultScreen(),
     TypingScoreScreen(),
     UserHistoryScreen(),
   ];
@@ -25,7 +21,7 @@ class _ButtonScreenState extends State<ButtonScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex], // Render the selected screen
+      body: _screens[_selectedIndex],
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
         onTap: (index) {
@@ -36,16 +32,13 @@ class _ButtonScreenState extends State<ButtonScreen> {
         height: 60,
         items: <Widget>[
           Icon(Icons.sports_esports, size: 30),
-          Icon(Icons.timer, size: 30),
           Icon(Icons.emoji_events, size: 30),
-          // Icon(Icons.show_chart, size: 30),
           Icon(Icons.person, size: 30),
         ],
         color: Colors.purple,
         backgroundColor: Colors.white,
         buttonBackgroundColor: Colors.white,
         animationCurve: Curves.easeInOut,
-        // animationDuration: Duration(milliseconds: 300),
       ),
     );
   }
