@@ -225,7 +225,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       appBar: AppBar(
         title: Text(
           'Speed Typing Challenge',
-          style: GoogleFonts.roboto(),
+          style: GoogleFonts.pacifico(),
         ),
       ),
       body: GestureDetector(

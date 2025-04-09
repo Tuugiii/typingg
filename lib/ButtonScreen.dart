@@ -1,3 +1,4 @@
+// import 'package:diplooajil/StatisticsScreen.dart';
 import 'package:diplooajil/TypingScoreScreen.dart';
 import 'package:diplooajil/UserHistoryScreen.dart';
 import 'package:diplooajil/resultScreen.dart';
@@ -16,6 +17,7 @@ class _ButtonScreenState extends State<ButtonScreen> {
     ResultScreen(),
     TypingScoreScreen(),
     UserHistoryScreen(),
+    // StatisticsScreen(),
   ];
 
   @override
@@ -33,6 +35,7 @@ class _ButtonScreenState extends State<ButtonScreen> {
         items: <Widget>[
           Icon(Icons.sports_esports, size: 30),
           Icon(Icons.emoji_events, size: 30),
+          // Icon(Icons.start, size: 30),
           Icon(Icons.person, size: 30),
         ],
         color: Colors.purple,

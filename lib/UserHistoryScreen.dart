@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class UserHistoryScreen extends StatelessWidget {
   final List<Map<String, String>> history = [
-    {'name': 'Emy', 'date': '20-10-2025', 'duration': '30 Seconds', 'difficulty': 'Hard', 'rightWords': '37', 'wrongWords': '7', 'image': 'assets/images/profile.jpg'},
+    {'name': 'Enkhzul', 'date': '06-04-2025', 'duration': '5 Seconds', 'difficulty': 'Hard', 'rightWords': '37', 'wrongWords': '7', 'image': 'assets/images/profile.jpg'},
   ];
 
   @override

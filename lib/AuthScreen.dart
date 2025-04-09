@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:diplooajil/ButtonScreen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import './include.dart';
 
 void main() {
   runApp(const TypingMasterApp());
@@ -26,26 +29,73 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  bool isLogin = true;  // Default to login screen
+  bool isLogin = true;
   final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   void toggleScreen() {
     setState(() {
-      isLogin = !isLogin;  // Toggle between Login and Register screen
+      isLogin = !isLogin;
     });
   }
 
-  // This function will navigate directly to the ButtonScreen when login is successful
-  void handleLogin() {
-    // You can add login validation here if needed
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => ButtonScreen()),  // Navigate to ButtonScreen
+  // Register or Login function
+  Future<void> handleAuthAction() async {
+  final url = isLogin
+      ? Uri.parse(baseurl + 'users/login/')
+      : Uri.parse(baseurl + 'users/register/');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(
+        isLogin
+            ? { // Нэвтрэх үед зөвхөн email, password илгээнэ
+                'email': emailController.text,
+                'password': passwordController.text,
+              }
+            : { // Бүртгүүлэх үед username, email, password 3-г илгээнэ
+                'username': usernameController.text,
+                'email': emailController.text,
+                'password': passwordController.text,
+              },
+      ),
+    );
+
+    final responseData = json.decode(response.body);
+    print('Response Data: $responseData');  // Log the response
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      if (isLogin) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ButtonScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Амжилттай бүртгэгдлээ! Та одоо нэвтэрч болно.')),
+        );
+        setState(() {
+          isLogin = true; // Login руу шилжүүлэх
+        });
+      }
+    } else {
+      String errorMessage = responseData['error'] ?? 'Алдаа гарлаа';
+      print('Error message from server: $errorMessage'); // Log for debugging
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
+  } catch (e) {
+    print('Request error: $e');  // Log the exception for debugging
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Алдаа гарлаа: $e')),
     );
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +127,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         controller: usernameController,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.person),
-                          hintText: "Your name",
+                          hintText: "Нэр",
                           filled: true,
                           fillColor: Colors.purple.shade50,
                           border: OutlineInputBorder(
@@ -92,7 +142,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       controller: emailController,
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.email),
-                        hintText: "Your email",
+                        hintText: "Имэйл хаяг",
                         filled: true,
                         fillColor: Colors.purple.shade50,
                         border: OutlineInputBorder(
@@ -107,7 +157,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       obscureText: true,
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.lock),
-                        hintText: "Your password",
+                        hintText: "Нууц үг",
                         filled: true,
                         fillColor: Colors.purple.shade50,
                         border: OutlineInputBorder(
@@ -122,7 +172,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         obscureText: true,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.lock),
-                          hintText: "Repeat your password",
+                          hintText: "Нууц үг давтах",
                           filled: true,
                           fillColor: Colors.purple.shade50,
                           border: OutlineInputBorder(
@@ -143,9 +193,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        onPressed: handleLogin,  // Call the handleLogin function on press
+                        onPressed: handleAuthAction,
                         child: Text(
-                          isLogin ? 'LOGIN' : 'SIGN UP',
+                          isLogin ? 'Нэвтрэх' : 'Бүртгүүлэх',
                           style: const TextStyle(color: Colors.white, fontSize: 18),
                         ),
                       ),
@@ -156,9 +206,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       children: [
                         Text(isLogin ? "Don't have an account? " : "Already have an account? "),
                         GestureDetector(
-                          onTap: toggleScreen,  // Toggle between Login and Register screens
+                          onTap: toggleScreen,
                           child: Text(
-                            isLogin ? "Sign Up" : "Sign In",
+                            isLogin ? "Бүртгүүлэх" : "Нэвтрэх",
                             style: const TextStyle(
                               color: Colors.purple,
                               fontWeight: FontWeight.bold,
