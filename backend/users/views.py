@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework.response import Response
 from django.http import JsonResponse
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # Dynamically fetch the User model (either custom or default)
 User = get_user_model()
@@ -32,8 +33,6 @@ def register_user(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Нэвтрэх функц
-User = get_user_model()
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
@@ -44,10 +43,19 @@ def login_user(request):
         return JsonResponse({'error': 'Имэйл болон нууц үгээ оруулна уу!'}, status=400)
 
     try:
-        user = User.objects.get(email=email)  # Email-аар хайж байна
-        user = authenticate(username=user.username, password=password)  # Username-аар authenticate хийх
+        user = User.objects.get(email=email)
+        user = authenticate(username=user.username, password=password)
         if user:
-            return JsonResponse({'message': 'Амжилттай нэвтэрлээ!'}, status=200)
+            refresh = RefreshToken.for_user(user)
+            return JsonResponse({
+                'message': 'Амжилттай нэвтэрлээ!',
+                'token': str(refresh.access_token),
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email
+                }
+            }, status=200)
         else:
             return JsonResponse({'error': 'Нууц үг буруу байна.'}, status=400)
     except User.DoesNotExist:

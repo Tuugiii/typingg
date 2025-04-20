@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:diplooajil/ButtonScreen.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import './include.dart';
+import './services/auth_service.dart';
 
 void main() {
   runApp(const TypingMasterApp());
@@ -33,6 +31,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  bool isLoading = false;
 
   void toggleScreen() {
     setState(() {
@@ -42,70 +41,80 @@ class _AuthScreenState extends State<AuthScreen> {
 
   // Register or Login function
   Future<void> handleAuthAction() async {
-  final url = isLogin
-      ? Uri.parse(baseurl + 'users/login/')
-      : Uri.parse(baseurl + 'users/register/');
+    setState(() {
+      isLoading = true;
+    });
 
-  try {
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: json.encode(
-        isLogin
-            ? { // Нэвтрэх үед зөвхөн email, password илгээнэ
-                'email': emailController.text,
-                'password': passwordController.text,
-              }
-            : { // Бүртгүүлэх үед username, email, password 3-г илгээнэ
-                'username': usernameController.text,
-                'email': emailController.text,
-                'password': passwordController.text,
-              },
-      ),
-    );
-
-    final responseData = json.decode(response.body);
-    print('Response Data: $responseData');  // Log the response
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
+    try {
       if (isLogin) {
+        await AuthService.login(
+          emailController.text,
+          passwordController.text,
+        );
+
+        // Navigate to main screen after successful login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => ButtonScreen()),
         );
       } else {
+        await AuthService.register(
+          usernameController.text,
+          emailController.text,
+          passwordController.text,
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Амжилттай бүртгэгдлээ! Та одоо нэвтэрч болно.')),
+          SnackBar(
+              content: Text('Амжилттай бүртгэгдлээ! Та одоо нэвтэрч болно.')),
         );
         setState(() {
-          isLogin = true; // Login руу шилжүүлэх
+          isLogin = true;
         });
       }
-    } else {
-      String errorMessage = responseData['error'] ?? 'Алдаа гарлаа';
-      print('Error message from server: $errorMessage'); // Log for debugging
-
+    } catch (e) {
+      String errorMessage;
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection refused')) {
+        errorMessage =
+            'Сервертэй холбогдож чадсангүй. Та дараах зүйлсийг шалгана уу:\n'
+            '1. Сервер ажиллаж байгаа эсэх\n'
+            '2. Серверийн хаяг зөв эсэх\n'
+            '3. Интернэт холболт байгаа эсэх';
+      } else {
+        errorMessage = 'Алдаа гарлаа: ${e.toString()}';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
+        SnackBar(
+          content: Text(errorMessage),
+          duration: Duration(seconds: 5),
+        ),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
-  } catch (e) {
-    print('Request error: $e');  // Log the exception for debugging
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Алдаа гарлаа: $e')),
-    );
   }
-}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned(top: 0, left: 0, child: Image.asset('assets/images/main_top.png', width: 150)),
-          Positioned(bottom: 0, left: 0, child: Image.asset('assets/images/main_top.png', width: 150)),
-          Positioned(bottom: 0, right: 0, child: Image.asset('assets/images/login_bottom.png', width: 150)),
-          
+          Positioned(
+              top: 0,
+              left: 0,
+              child: Image.asset('assets/images/main_top.png', width: 150)),
+          Positioned(
+              bottom: 0,
+              left: 0,
+              child: Image.asset('assets/images/main_top.png', width: 150)),
+          Positioned(
+              bottom: 0,
+              right: 0,
+              child: Image.asset('assets/images/login_bottom.png', width: 150)),
           Center(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -118,11 +127,14 @@ class _AuthScreenState extends State<AuthScreen> {
                       height: 200,
                       width: 200,
                       child: Lottie.asset(
-                        isLogin ? 'assets/lottie/login.json' : 'assets/lottie/speed.json',
+                        isLogin
+                            ? 'assets/lottie/login.json'
+                            : 'assets/lottie/speed.json',
                       ),
                     ),
                     const SizedBox(height: 20),
-                    if (!isLogin) ...[ // Sign Up fields
+                    if (!isLogin) ...[
+                      // Sign Up fields
                       TextField(
                         controller: usernameController,
                         decoration: InputDecoration(
@@ -167,7 +179,8 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    if (!isLogin) ...[ // Password Repeat field
+                    if (!isLogin) ...[
+                      // Password Repeat field
                       TextField(
                         obscureText: true,
                         decoration: InputDecoration(
@@ -193,18 +206,23 @@ class _AuthScreenState extends State<AuthScreen> {
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        onPressed: handleAuthAction,
-                        child: Text(
-                          isLogin ? 'Нэвтрэх' : 'Бүртгүүлэх',
-                          style: const TextStyle(color: Colors.white, fontSize: 18),
-                        ),
+                        onPressed: isLoading ? null : handleAuthAction,
+                        child: isLoading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                isLogin ? 'Нэвтрэх' : 'Бүртгүүлэх',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 18),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(isLogin ? "Don't have an account? " : "Already have an account? "),
+                        Text(isLogin
+                            ? "Don't have an account? "
+                            : "Already have an account? "),
                         GestureDetector(
                           onTap: toggleScreen,
                           child: Text(

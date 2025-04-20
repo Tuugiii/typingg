@@ -101,13 +101,13 @@
 
 
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
-from .models import Language, TextChallenge
-from .serializers import LanguageSerializer, TextChallengeSerializer
+from .models import Language, TextChallenge, ChallengeAttempt
+from .serializers import LanguageSerializer, TextChallengeSerializer, ChallengeAttemptSerializer
 import random
 
 # 👇 Одоо бүх CRUD үйлдлийг дэмжинэ (GET, POST, PUT, DELETE)
@@ -193,3 +193,13 @@ def get_random_challenge(request):
     challenge = random.choice(challenges)
     serializer = TextChallengeSerializer(challenge)
     return Response(serializer.data)
+
+class ChallengeAttemptViewSet(viewsets.ModelViewSet):
+    serializer_class = ChallengeAttemptSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ChallengeAttempt.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

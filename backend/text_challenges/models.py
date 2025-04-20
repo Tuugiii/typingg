@@ -27,3 +27,18 @@ class TextChallenge(models.Model):
     
     def __str__(self):
         return f"{self.language.language_code} - {self.difficulty_level} Challenge #{self.challenge_id}"
+
+
+class ChallengeAttempt(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='challenge_attempts')
+    challenge = models.ForeignKey(TextChallenge, on_delete=models.CASCADE, related_name='attempts')
+    correct_word_count = models.IntegerField()
+    wrong_word_count = models.IntegerField()
+    duration_seconds = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username}'s attempt on Challenge #{self.challenge.challenge_id}"

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'services/challenge_service.dart';
 
 void main() {
   runApp(MyApp());
@@ -16,9 +17,58 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class TypingScoreScreen extends StatelessWidget {
+class TypingScoreScreen extends StatefulWidget {
+  @override
+  _TypingScoreScreenState createState() => _TypingScoreScreenState();
+}
+
+class _TypingScoreScreenState extends State<TypingScoreScreen> {
+  final ChallengeService _challengeService = ChallengeService();
+  bool _isLoading = true;
+  Map<String, dynamic>? _lastAttempt;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLastAttempt();
+  }
+
+  Future<void> _fetchLastAttempt() async {
+    try {
+      final attempts = await _challengeService.getUserChallengeHistory();
+      setState(() {
+        _lastAttempt = attempts.isNotEmpty ? attempts.first : null;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        body: Center(child: Text('Error: $_error')),
+      );
+    }
+
+    if (_lastAttempt == null) {
+      return Scaffold(
+        body: Center(child: Text('No attempts found')),
+      );
+    }
+
     return Scaffold(
       body: Stack(
         children: [
@@ -51,7 +101,7 @@ class TypingScoreScreen extends StatelessWidget {
                       Icon(Icons.star, color: Colors.amber, size: 24),
                       SizedBox(width: 8),
                       Text(
-                        "MEDIUM",
+                        _lastAttempt!['challenge_difficulty'] ?? "MEDIUM",
                         style: GoogleFonts.pacifico(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -80,7 +130,7 @@ class TypingScoreScreen extends StatelessWidget {
                     ],
                   ),
                   child: Text(
-                    "58 WPM",
+                    "${_lastAttempt!['correct_word_count']} WPM",
                     style: GoogleFonts.poppins(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
@@ -99,21 +149,39 @@ class TypingScoreScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.refresh, color: Colors.deepPurpleAccent, size: 24),
+                    Icon(Icons.refresh,
+                        color: Colors.deepPurpleAccent, size: 24),
                     SizedBox(width: 16),
                     Icon(Icons.emoji_events, color: Colors.amber, size: 24),
                   ],
                 ),
                 SizedBox(height: 20),
-                ScoreCard("Correct Keystrokes", "306", Colors.deepPurple),
-                ScoreCard("Correct Words", "59", Colors.pinkAccent),
-                ScoreCard("Accuracy", "99%", Colors.purpleAccent),
+                ScoreCard(
+                    "Correct Keystrokes",
+                    "${(_lastAttempt!['correct_word_count'] * 5).round()}",
+                    Colors.deepPurple),
+                ScoreCard(
+                    "Correct Words",
+                    "${_lastAttempt!['correct_word_count']}",
+                    Colors.pinkAccent),
+                ScoreCard(
+                    "Accuracy",
+                    "${_calculateAccuracy(_lastAttempt!).round()}%",
+                    Colors.purpleAccent),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  double _calculateAccuracy(Map<String, dynamic> attempt) {
+    final correct = attempt['correct_word_count'] as int;
+    final wrong = attempt['wrong_word_count'] as int;
+    final total = correct + wrong;
+    if (total == 0) return 0;
+    return ((correct / total) * 100).roundToDouble();
   }
 
   Widget _background() {
@@ -198,7 +266,8 @@ class ScoreCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: color.withOpacity(0.9), size: 28),
+                Icon(Icons.check_circle_rounded,
+                    color: color.withOpacity(0.9), size: 28),
                 SizedBox(width: 12),
                 Text(
                   title,
