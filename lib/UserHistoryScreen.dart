@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:diplooajil/include.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/challenge_service.dart';
 import 'services/auth_service.dart';
 import 'AuthScreen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
+import 'dart:html' as html;
 import 'dart:io';
 import 'services/user_service.dart';
 
@@ -80,20 +84,57 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
   Future<void> _pickAndUploadImage() async {
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-      if (image != null) {
-        setState(() => isLoading = true);
-        final response =
-            await _userService.updateProfileImage(File(image.path));
+      if (kIsWeb) {
+        // Web: use File Picker via dart:html
+        final uploadInput = html.FileUploadInputElement();
+        uploadInput.accept = 'image/*';
+        uploadInput.click();
 
-        if (response.containsKey('user')) {
-          setState(() {
-            profileImageUrl = response['user']['profile_image_url'];
+        uploadInput.onChange.listen((event) async {
+          final file = uploadInput.files!.first;
+          final reader = html.FileReader();
+
+          reader.readAsArrayBuffer(file);
+
+          reader.onLoadEnd.listen((event) async {
+            final data = reader.result as Uint8List;
+            setState(() => isLoading = true);
+
+            final response =
+                await _userService.updateProfileImageWeb(data, file.name);
+
+            if (response.containsKey('user')) {
+              setState(() {
+                profileImageUrl = response['user']['profile_image_url'];
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Profile image updated successfully')),
+              );
+            }
+            setState(() => isLoading = false);
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Profile image updated successfully')),
-          );
+        });
+      } else {
+        // Mobile/desktop: native image picker
+        final XFile? image =
+            await picker.pickImage(source: ImageSource.gallery);
+
+        if (image != null) {
+          setState(() => isLoading = true);
+          final response =
+              await _userService.updateProfileImage(File(image.path));
+
+          if (response.containsKey('user')) {
+            setState(() {
+              profileImageUrl = response['user']['profile_image_url'];
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Profile image updated successfully')),
+            );
+          }
         }
       }
     } catch (e) {
