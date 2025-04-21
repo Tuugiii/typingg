@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:diplooajil/include.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
@@ -75,5 +77,31 @@ class UserService {
     } catch (e) {
       throw Exception('Error updating profile image: $e');
     }
+  }
+
+  Future<Map<String, dynamic>> updateProfileImageWeb(
+      Uint8List data, String filename) async {
+    final token = await AuthService.getToken();
+    final uri =
+        Uri.parse('${baseUrl}users/profile/image/'); // your endpoint here
+    final request = http.MultipartRequest('POST', uri);
+
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+    });
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'profile_image',
+        data,
+        filename: filename,
+        contentType: MediaType('image', 'jpeg'),
+      ),
+    );
+
+    final response = await request.send();
+    final respStr = await response.stream.bytesToString();
+
+    return json.decode(respStr);
   }
 }
