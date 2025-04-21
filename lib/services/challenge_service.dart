@@ -95,7 +95,22 @@ class ChallengeService {
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        print('Raw response: ${response.body}');
+
+        String? charset =
+            response.headers['content-type']?.contains('charset=') == true
+                ? response.headers['content-type']!.split('charset=')[1]
+                : null;
+
+        print('Response charset: $charset');
+
+        var responseData = json.decode(utf8.decode(response.bodyBytes));
+
+        if (responseData.containsKey('text')) {
+          print('Challenge text: ${responseData['text']}');
+        }
+
+        return responseData;
       } else if (response.statusCode == 401) {
         await AuthService.logout();
         throw Exception('Session expired. Please login again.');

@@ -192,7 +192,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
                   GaugeAnnotation(
                     widget: Text(
                       displayValue,
-                      style: GoogleFonts.pacifico().copyWith(
+                      style: GoogleFonts.notoSans(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: color,
@@ -208,7 +208,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
         ),
         Text(
           label,
-          style: GoogleFonts.pacifico().copyWith(
+          style: GoogleFonts.notoSans(
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: color,
@@ -223,7 +223,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       return Center(
         child: Text(
           'No challenge text available',
-          style: GoogleFonts.roboto(
+          style: GoogleFonts.notoSans(
             fontSize: 20,
             color: Colors.grey,
           ),
@@ -256,7 +256,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
         ),
         child: Text(
           sampleWords[i],
-          style: GoogleFonts.lato(
+          style: GoogleFonts.notoSans(
             color: textColor,
             fontSize: 14,
             height: 1.5,
@@ -280,7 +280,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       appBar: AppBar(
         title: Text(
           'Speed Typing Challenge',
-          style: GoogleFonts.roboto(),
+          style: GoogleFonts.notoSans(),
         ),
       ),
       body: GestureDetector(

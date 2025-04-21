@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 
@@ -30,7 +31,7 @@ class TextChallenge(models.Model):
 
 
 class ChallengeAttempt(models.Model):
-    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='challenge_attempts')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='challenge_attempts')
     challenge = models.ForeignKey(TextChallenge, on_delete=models.CASCADE, related_name='attempts')
     correct_word_count = models.IntegerField()
     wrong_word_count = models.IntegerField()

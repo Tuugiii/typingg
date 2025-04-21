@@ -1,8 +1,12 @@
+import 'package:diplooajil/include.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/challenge_service.dart';
 import 'services/auth_service.dart';
 import 'AuthScreen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'services/user_service.dart';
 
 class UserHistoryScreen extends StatefulWidget {
   @override
@@ -11,14 +15,94 @@ class UserHistoryScreen extends StatefulWidget {
 
 class _UserHistoryScreenState extends State<UserHistoryScreen> {
   final ChallengeService _challengeService = ChallengeService();
+  final UserService _userService = UserService();
   List<Map<String, dynamic>> history = [];
   bool isLoading = true;
   String? error;
+  String? profileImageUrl;
 
   @override
   void initState() {
     super.initState();
-    _loadChallengeHistory();
+    _checkAuthAndLoadData();
+  }
+
+  Future<void> _checkAuthAndLoadData() async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        // If no token, navigate to auth screen
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => AuthScreen()),
+          (Route<dynamic> route) => false,
+        );
+        return;
+      }
+      await _loadUserData();
+    } catch (e) {
+      print('Auth check error: $e');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => AuthScreen()),
+        (Route<dynamic> route) => false,
+      );
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      setState(() => isLoading = true);
+      await Future.wait([
+        _loadChallengeHistory(),
+        _loadUserProfile(),
+      ]);
+    } catch (e) {
+      print('Error loading user data: $e');
+      setState(() {
+        error = e.toString();
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final userData = await _userService.getUserProfile();
+      setState(() {
+        profileImageUrl =
+            baseurl.replaceFirst('/api/', '') + userData['profile_image_url'];
+      });
+    } catch (e) {
+      print('Error loading user profile: $e');
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+      if (image != null) {
+        setState(() => isLoading = true);
+        final response =
+            await _userService.updateProfileImage(File(image.path));
+
+        if (response.containsKey('user')) {
+          setState(() {
+            profileImageUrl = response['user']['profile_image_url'];
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Profile image updated successfully')),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update profile image: $e')),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   Future<void> _loadChallengeHistory() async {
@@ -138,142 +222,256 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
                       ),
                       SizedBox(height: 8),
                       ElevatedButton(
-                        onPressed: _loadChallengeHistory,
+                        onPressed: _loadUserData,
                         child: Text('Retry'),
                       ),
                     ],
                   ),
                 )
-              : history.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Түүх олдсонгүй',
-                        style: GoogleFonts.roboto(
-                            fontSize: 18, color: Colors.grey),
+              : Column(
+                  children: [
+                    // Profile Section
+                    Container(
+                      margin: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.purple.shade300,
+                            Colors.purple.shade600
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.purple.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: history.length,
-                      itemBuilder: (context, index) {
-                        final item = history[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => UserDetailsScreen(
-                                  userName: item['name']!,
-                                  allHistory: history,
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: _pickAndUploadImage,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: profileImageUrl != null
+                                        ? NetworkImage(profileImageUrl!)
+                                        : AssetImage(
+                                                'assets/images/profile.jpg')
+                                            as ImageProvider,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                          child: Card(
-                            margin: EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            elevation: 5,
-                            shadowColor: Colors.teal.withOpacity(0.4),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ListTile(
-                                    leading: CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage:
-                                          AssetImage(item['image']!),
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
                                     ),
-                                    title: Text(
-                                      item['name']!,
-                                      style: GoogleFonts.lobster(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    subtitle: Text(item['date']!,
-                                        style: GoogleFonts.roboto(
-                                            fontSize: 14,
-                                            color: Colors.black54)),
-                                    trailing: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          item['difficulty']!,
-                                          style: GoogleFonts.roboto(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: item['difficulty'] ==
-                                                    'MEDIUM'
-                                                ? Colors.orange
-                                                : item['difficulty'] == 'EASY'
-                                                    ? Colors.green
-                                                    : Colors.blueAccent,
-                                          ),
-                                        ),
-                                        SizedBox(height: 5),
-                                        Text(item['duration']!,
-                                            style: GoogleFonts.roboto(
-                                                fontSize: 14,
-                                                color: Colors.black54)),
-                                      ],
+                                    child: Icon(
+                                      Icons.camera_alt,
+                                      size: 20,
+                                      color: Colors.purple,
                                     ),
                                   ),
-                                  Divider(),
-                                  ExpansionTile(
-                                    tilePadding: EdgeInsets.zero,
-                                    childrenPadding: EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 6),
-                                    title: Row(
-                                      children: [
-                                        Icon(Icons.info_outline,
-                                            size: 16, color: Colors.deepPurple),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Details',
-                                          style: GoogleFonts.roboto(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.deepPurple,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    iconColor: Colors.purple,
-                                    collapsedIconColor: Colors.grey,
-                                    initiallyExpanded: false,
-                                    children: [
-                                      _buildDetailRow('✅ Right Words',
-                                          item['rightWords']!, Colors.green, 18,
-                                          isNumber: true),
-                                      _buildDetailRow('❌ Wrong Words',
-                                          item['wrongWords']!, Colors.red, 18,
-                                          isNumber: true),
-                                      _buildDetailRow('📅 Date', item['date']!,
-                                          Colors.black, 16),
-                                      _buildDetailRow(
-                                          '🎯 Test Mode',
-                                          item['difficulty']!,
-                                          Colors.black,
-                                          16),
-                                      _buildDetailRow('⏳ Test Duration',
-                                          item['duration']!, Colors.black, 16),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      },
+                          SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  history.isNotEmpty
+                                      ? history[0]['name']
+                                      : 'User',
+                                  style: GoogleFonts.pacifico(
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Total Tests: ${history.length}',
+                                  style: GoogleFonts.roboto(
+                                    fontSize: 16,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    // History List
+                    Expanded(
+                      child: history.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Түүх олдсонгүй',
+                                style: GoogleFonts.roboto(
+                                    fontSize: 18, color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: history.length,
+                              itemBuilder: (context, index) {
+                                final item = history[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => UserDetailsScreen(
+                                          userName: item['name']!,
+                                          allHistory: history,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Card(
+                                    margin: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    elevation: 5,
+                                    shadowColor: Colors.teal.withOpacity(0.4),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          ListTile(
+                                            leading: CircleAvatar(
+                                              radius: 30,
+                                              backgroundImage:
+                                                  AssetImage(item['image']!),
+                                            ),
+                                            title: Text(
+                                              item['name']!,
+                                              style: GoogleFonts.lobster(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            subtitle: Text(item['date']!,
+                                                style: GoogleFonts.roboto(
+                                                    fontSize: 14,
+                                                    color: Colors.black54)),
+                                            trailing: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  item['difficulty']!,
+                                                  style: GoogleFonts.roboto(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: item['difficulty'] ==
+                                                            'MEDIUM'
+                                                        ? Colors.orange
+                                                        : item['difficulty'] ==
+                                                                'EASY'
+                                                            ? Colors.green
+                                                            : Colors.blueAccent,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 5),
+                                                Text(item['duration']!,
+                                                    style: GoogleFonts.roboto(
+                                                        fontSize: 14,
+                                                        color: Colors.black54)),
+                                              ],
+                                            ),
+                                          ),
+                                          Divider(),
+                                          ExpansionTile(
+                                            tilePadding: EdgeInsets.zero,
+                                            childrenPadding:
+                                                EdgeInsets.symmetric(
+                                                    horizontal: 5, vertical: 6),
+                                            title: Row(
+                                              children: [
+                                                Icon(Icons.info_outline,
+                                                    size: 16,
+                                                    color: Colors.deepPurple),
+                                                SizedBox(width: 6),
+                                                Text(
+                                                  'Details',
+                                                  style: GoogleFonts.roboto(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.deepPurple,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            iconColor: Colors.purple,
+                                            collapsedIconColor: Colors.grey,
+                                            initiallyExpanded: false,
+                                            children: [
+                                              _buildDetailRow(
+                                                  '✅ Right Words',
+                                                  item['rightWords']!,
+                                                  Colors.green,
+                                                  18,
+                                                  isNumber: true),
+                                              _buildDetailRow(
+                                                  '❌ Wrong Words',
+                                                  item['wrongWords']!,
+                                                  Colors.red,
+                                                  18,
+                                                  isNumber: true),
+                                              _buildDetailRow(
+                                                  '📅 Date',
+                                                  item['date']!,
+                                                  Colors.black,
+                                                  16),
+                                              _buildDetailRow(
+                                                  '🎯 Test Mode',
+                                                  item['difficulty']!,
+                                                  Colors.black,
+                                                  16),
+                                              _buildDetailRow(
+                                                  '⏳ Test Duration',
+                                                  item['duration']!,
+                                                  Colors.black,
+                                                  16),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
     );
   }
 
