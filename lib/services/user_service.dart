@@ -15,9 +15,6 @@ class UserService {
         throw Exception('No authentication token found');
       }
 
-      print('Making request to: ${baseUrl}users/profile/');
-      print('Using token: $token');
-
       final response = await http.get(
         Uri.parse('${baseUrl}users/profile/'),
         headers: {
@@ -25,9 +22,6 @@ class UserService {
           'Content-Type': 'application/json',
         },
       );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);

@@ -52,8 +52,8 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
     try {
       setState(() => isLoading = true);
       await Future.wait([
-        _loadChallengeHistory(),
         _loadUserProfile(),
+        _loadChallengeHistory(),
       ]);
     } catch (e) {
       print('Error loading user data: $e');
@@ -108,6 +108,8 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
   Future<void> _loadChallengeHistory() async {
     try {
       final data = await _challengeService.getUserChallengeHistory();
+      print('profileImageUrl: ${profileImageUrl}');
+
       setState(() {
         history = data
             .map((attempt) => {
@@ -118,7 +120,9 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
                   'difficulty': attempt['challenge_difficulty'] ?? 'Unknown',
                   'rightWords': attempt['correct_word_count'].toString(),
                   'wrongWords': attempt['wrong_word_count'].toString(),
-                  'image': 'assets/images/profile.jpg', // Default image
+                  'image': profileImageUrl == null
+                      ? 'assets/images/profile.jpg'
+                      : profileImageUrl,
                 })
             .toList();
         isLoading = false;
@@ -364,8 +368,11 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
                                           ListTile(
                                             leading: CircleAvatar(
                                               radius: 30,
-                                              backgroundImage:
-                                                  AssetImage(item['image']!),
+                                              backgroundImage: item['image']!
+                                                      .startsWith('http')
+                                                  ? NetworkImage(item['image']!)
+                                                  : AssetImage(item['image']!)
+                                                      as ImageProvider,
                                             ),
                                             title: Text(
                                               item['name']!,
@@ -590,7 +597,9 @@ class UserDetailsScreen extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
                     radius: 28,
-                    backgroundImage: AssetImage(item['image']!),
+                    backgroundImage: item['image']!.startsWith('http')
+                        ? NetworkImage(item['image']!)
+                        : AssetImage(item['image']!) as ImageProvider,
                   ),
                   title: Text(
                     item['name']!,
