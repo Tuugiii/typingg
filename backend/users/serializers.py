@@ -4,18 +4,18 @@ from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
-    profile_image_url = serializers.SerializerMethodField()
+class UserSerializer(serializers.ModelSerializer):   # Хэрэглэгчийн профайл мэдээллийг сериализ хийж өгөх сериализер
+    profile_image_url = serializers.SerializerMethodField()      # Профайл зургийн линкийг динамикаар авах тусгай field
 
     class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'profile_image', 'profile_image_url')
-        read_only_fields = ('id', 'profile_image_url')
+        model = User         # Аль model дээр сериализер ажиллахыг заана
+        fields = ('id', 'username', 'email', 'profile_image', 'profile_image_url')         # Сериализад орох талбарууд
+        read_only_fields = ('id', 'profile_image_url')         # Эдгээр талбаруудыг зөвхөн унших боломжтой
 
-    def get_profile_image_url(self, obj):
+    def get_profile_image_url(self, obj):      # Профайл зургийн URL-г авах тусгай функц
         return obj.profile_image_url
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer): # Хэрэглэгч бүртгүүлэхэд зориулсан сериализер
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
@@ -23,11 +23,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'password', 'password2', 'email')
 
-    def validate(self, attrs):
+    def validate(self, attrs):         # password ба password2 талбарууд ижил эсэхийг шалгана
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
         return attrs
 
+# hereglgch uusgh create punkts
     def create(self, validated_data):
         validated_data.pop('password2')
         user = User.objects.create_user(**validated_data)

@@ -68,7 +68,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       setState(() => isLoading = false);
     }
   }
-
+//  // 🟣 Хэрэглэгчийн профайл зургийг ачаална
   Future<void> _loadUserProfile() async {
     try {
       final userData = await _userService.getUserProfile();
@@ -80,7 +80,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       print('Error loading user profile: $e');
     }
   }
-
+  // 🖼 Зураг сонгож профайл зураг шинэчлэх (web болон mobile)
   Future<void> _pickAndUploadImage() async {
     try {
       final ImagePicker picker = ImagePicker();
@@ -145,7 +145,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       setState(() => isLoading = false);
     }
   }
-
+  // 🟣 Хэрэглэгчийн сорилын түүхийг ачаалж list болгож хадгална
   Future<void> _loadChallengeHistory() async {
     try {
       final data = await _challengeService.getUserChallengeHistory();
@@ -175,7 +175,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       });
     }
   }
-
+  // 🕓 Огноог форматлах функц
   String _formatDate(String? dateStr) {
     if (dateStr == null) return 'Unknown Date';
     try {
@@ -185,7 +185,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       return 'Invalid Date';
     }
   }
-
+  // 🚪 Гарах товч дарсан үед auth logout хийнэ
   Future<void> _handleLogout() async {
     try {
       await AuthService.logout();

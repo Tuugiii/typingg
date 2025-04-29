@@ -8,37 +8,37 @@ class AuthService {
   static const String _userDataKey = 'user_data';
   static const String _userIdKey = 'user_id';
 
-  // Get the stored token
+  // Get the stored token   // Хадгалсан токеныг авах
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_tokenKey);
   }
 
-  // Get the stored user ID
+  // Get the stored user ID   // Хадгалсан хэрэглэгчийн ID-г авах
   static Future<int?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_userIdKey);
   }
 
-  // Save the token
+  // Save the token   // Токеныг SharedPreferences-д хадгалах
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
   }
 
-  // Save the user ID
+  // Save the user ID    // Хэрэглэгчийн ID-г хадгалах
   static Future<void> saveUserId(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_userIdKey, userId);
   }
 
-  // Save user data
+  // Save user data    // Хэрэглэгчийн мэдээллийг хадгалах
   static Future<void> saveUserData(Map<String, dynamic> userData) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userDataKey, json.encode(userData));
   }
 
-  // Get user data
+  // Get user data    // Хадгалсан хэрэглэгчийн мэдээллийг авах
   static Future<Map<String, dynamic>?> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final userDataString = prefs.getString(_userDataKey);
@@ -48,7 +48,7 @@ class AuthService {
     return null;
   }
 
-  // Clear stored data (for logout)
+  // Clear stored data (for logout)   // Токен, хэрэглэгчийн өгөгдлийг цэвэрлэх (logout хийхэд ашиглана)
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
@@ -56,10 +56,11 @@ class AuthService {
     await prefs.remove(_userIdKey);
   }
 
-  // Login
+  // Login   // Хэрэглэгчийг login хийх (сервертэй холбогдох)
   static Future<Map<String, dynamic>> login(
       String email, String password) async {
     try {
+            // Login API руу POST хүсэлт явуулна
       final response = await http.post(
         Uri.parse('${baseurl}users/login/'),
         headers: {"Content-Type": "application/json"},
@@ -68,15 +69,15 @@ class AuthService {
           'password': password,
         }),
       );
-
+      // Хэрэв амжилттай нэвтэрвэл
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         print('Login response: $responseData'); // Debug print
-
+        // Токен хадгалах
         if (responseData['token'] != null) {
           await saveToken(responseData['token']);
 
-          // Extract and save user ID
+          // Extract and save user ID           // Хэрэглэгчийн ID-г хадгалах
           final userId = responseData['user_id'] ?? responseData['user']?['id'];
           if (userId != null) {
             print('Saving user ID: $userId'); // Debug print
@@ -86,7 +87,7 @@ class AuthService {
             throw Exception('No user ID in login response');
           }
 
-          // Save user data if available
+          // Save user data if available           // Хэрэглэгчийн мэдээлэл хадгалах
           if (responseData['user'] != null) {
             await saveUserData(responseData['user']);
           }
@@ -104,7 +105,7 @@ class AuthService {
     }
   }
 
-  // Register
+  // Register   // Хэрэглэгчийг бүртгүүлэх API
   static Future<Map<String, dynamic>> register(
       String username, String email, String password) async {
     final response = await http.post(

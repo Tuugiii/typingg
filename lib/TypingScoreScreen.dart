@@ -23,17 +23,17 @@ class TypingScoreScreen extends StatefulWidget {
 }
 
 class _TypingScoreScreenState extends State<TypingScoreScreen> {
-  final ChallengeService _challengeService = ChallengeService();
-  bool _isLoading = true;
-  Map<String, dynamic>? _lastAttempt;
+  final ChallengeService _challengeService = ChallengeService(); // API-с дата татах
+  bool _isLoading = true; /// Дата татаж байгаа эсэх
+  Map<String, dynamic>? _lastAttempt; //Хамгийн сүүлийн сорилын үр дүн
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _fetchLastAttempt();
+    _fetchLastAttempt(); /// Эхлэхэд хамгийн сүүлийн сорилыг татах
   }
-
+//Хамгийн сүүлийн сорил татах
   Future<void> _fetchLastAttempt() async {
     try {
       final attempts = await _challengeService.getUserChallengeHistory();
@@ -48,7 +48,7 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
       });
     }
   }
-
+//Хэрэв Loading байвал
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -56,13 +56,13 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
+//Хэрэв Алдаа гарсан бол
     if (_error != null) {
       return Scaffold(
         body: Center(child: Text('Error: $_error')),
       );
     }
-
+//Хэрэв Орлогдсон сорил байхгүй бол
     if (_lastAttempt == null) {
       return Scaffold(
         body: Center(child: Text('No attempts found')),
@@ -130,6 +130,7 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
                     ],
                   ),
                   child: Text(
+                    //Correct Words тоог шууд WPM гэж үзэж байна.
                     "${_lastAttempt!['correct_word_count']} WPM",
                     style: GoogleFonts.poppins(
                       fontSize: 48,
@@ -157,14 +158,17 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
                 ),
                 SizedBox(height: 20),
                 ScoreCard(
+                  //Correct Keystrokes (Зөв бичигдсэн үсгийн тоо) 
+                  //10 зөв үг бичсэн → 10 × 5 = 50 зөв даралт (keystrokes)
                     "Correct Keystrokes",
                     "${(_lastAttempt!['correct_word_count'] * 5).round()}",
                     Colors.deepPurple),
                 ScoreCard(
+                  // zuv bicsn ug
                     "Correct Words",
                     "${_lastAttempt!['correct_word_count']}",
                     Colors.pinkAccent),
-                ScoreCard(
+                ScoreCard( 
                     "Accuracy",
                     "${_calculateAccuracy(_lastAttempt!).round()}%",
                     Colors.purpleAccent),
@@ -175,7 +179,9 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
       ),
     );
   }
-
+//Naruiivchlal
+//total = correct + wrong = нийт бичсэн үг
+//accuracy = (зөв / нийт) × 100
   double _calculateAccuracy(Map<String, dynamic> attempt) {
     final correct = attempt['correct_word_count'] as int;
     final wrong = attempt['wrong_word_count'] as int;

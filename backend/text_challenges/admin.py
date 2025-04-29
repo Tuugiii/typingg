@@ -3,9 +3,9 @@ from .models import Language, TextChallenge, ChallengeAttempt
 
 @admin.register(Language)
 class LanguageAdmin(admin.ModelAdmin):
-    list_display = ('language_code', 'language_name', 'is_active')
-    list_filter = ('is_active',)
-    search_fields = ('language_code', 'language_name')
+    list_display = ('language_code', 'language_name', 'is_active') # Админ жагсаалтад харагдах баганууд
+    list_filter = ('is_active',)      # Filter хэсэгт харагдах сонголтууд
+    search_fields = ('language_code', 'language_name')     # Хайлтаар хайж болох талбарууд
 
 @admin.register(TextChallenge)
 class TextChallengeAdmin(admin.ModelAdmin):

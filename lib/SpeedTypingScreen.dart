@@ -5,9 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/challenge_service.dart';
 
 class SpeedTypingScreen extends StatefulWidget {
-  final String langCode;
-  final String level;
-  final int minutes;
+  final String langCode; // Хэлний код
+  final String level; //Төвшин
+  final int minutes;  //hugacaa min
 
   const SpeedTypingScreen({
     Key? key,
@@ -34,7 +34,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
   List<bool> correctness = [];
   String currentWord = '';
   int currentIndex = 0;
-  int wpm = 0;
+  int wpm = 0; 
   double errors = 0.0;
   double accuracy = 0.0;
   final TextEditingController _controller = TextEditingController();
@@ -44,17 +44,17 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
   @override
   void initState() {
     super.initState();
-    _timeLeft = widget.minutes * 60;
-    _fetchChallenge();
+    _timeLeft = widget.minutes * 60; // Эхлэх секунд
+    _fetchChallenge();  //Сорилыг серверээс авна
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _textController.dispose();
+    _textController.dispose(); // Таймерыг цэвэрлэнэ
     super.dispose();
   }
-
+// Сорилыг серверээс татах
   Future<void> _fetchChallenge() async {
     try {
       final challenge = await _challengeService.getChallenge(
@@ -63,10 +63,12 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
         _challengeText = challenge['content'];
         _challengeId = challenge['challenge_id'].toString();
         // Split by whitespace and filter out empty strings
+        // Үгсийг задлах
         sampleWords = _challengeText
             .split(RegExp(r'\s+'))
             .where((word) => word.isNotEmpty)
             .toList();
+          // Зөв буруу тэмдэглэх жагсаалт
         correctness = List.filled(sampleWords.length, false);
         _isLoading = false;
       });
@@ -74,7 +76,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       print('Error fetching challenge: $e');
     }
   }
-
+// Timer ajilluulah
   void _startTimer() {
     if (!_isTimerRunning) {
       setState(() {
@@ -94,7 +96,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       });
     }
   }
-
+// Сорилын үр дүн хадгалах
   Future<void> _saveAttempt() async {
     try {
       print(
@@ -123,16 +125,16 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       );
     }
   }
-
+// Бичсэн үгийг шалгах
   void _handleWordTyped(String value) {
     if (value.endsWith(' ')) {
-      String typedWord = value.trim().toLowerCase();
+      String typedWord = value.trim(); //одоо жижиг үсгээр хувиргахгүй
       if (currentIndex < sampleWords.length) {
-        bool isCorrect = typedWord == sampleWords[currentIndex].toLowerCase();
+        bool isCorrect = typedWord == sampleWords[currentIndex];  //яг ижил бичсэн эсэхийг шалгана
         if (isCorrect) {
-          wpm++;
+          wpm++;  // зөв бичсэн үг тоолно
         } else {
-          errors++;
+          errors++; //buruu bicsn ugiin toolno
           print('Expected: "${sampleWords[currentIndex]}", Got: "$typedWord"');
         }
         correctness[currentIndex] = isCorrect;
@@ -143,6 +145,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       setState(() {
         int totalTyped = currentIndex;
         int correctWords = wpm;
+        //nariivchlal accuracy = (Зөв бичсэн үг / Нийт бичсэн үг) × 100
         accuracy = totalTyped > 0
             ? ((correctWords / totalTyped) * 100).toInt().toDouble()
             : 0.0;
@@ -236,7 +239,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
   for (int i = 0; i < sampleWords.length; i++) {
     Color bgColor = const Color(0xFFEFEFEF); // default саарал фон
     Color textColor = Colors.grey.shade700;
-    FontWeight fontWeight = FontWeight.normal;
+    FontWeight fontWeight = FontWeight.bold;  //bivihs umnuh text bs tod bna
     double fontSize = 15;
 
     if (i == currentIndex) {

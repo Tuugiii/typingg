@@ -33,19 +33,19 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  String _selectedLanguage = "en";
-  String _selectedGameMode = "Easy";
-  List<int> _availableMinutes = [];
-  int? _selectedMinute;
-  List<bool> _isSelectedGameMode = [true, false, false];
-  List<dynamic> languageSummary = [];
+  String _selectedLanguage = "en";  //songoson hel
+  String _selectedGameMode = "Easy"; //Сонгосон тоглоомын горим
+  List<int> _availableMinutes = []; //Сонгож болох минутууд
+  int? _selectedMinute; // Сонгосон минут
+  List<bool> _isSelectedGameMode = [true, false, false]; //Easy, Medium, Hard
+  List<dynamic> languageSummary = [];  //helnii medeelel
 
   @override
   void initState() {
     super.initState();
-    fetchLanguageSummary();
+    fetchLanguageSummary(); // Эхлээд хэлний мэдээллийг серверээс татна
   }
-
+// helnii medeellig tatah api
   Future<void> fetchLanguageSummary() async {
     try {
       final response =
@@ -62,7 +62,7 @@ class _ResultScreenState extends State<ResultScreen> {
       print('Error fetching language summary: $e');
     }
   }
-
+// Сонгогдсон хэлний минутуудыг шинэчлэх
   void _updateAvailableMinutes() {
     if (languageSummary.isEmpty) return;
 
