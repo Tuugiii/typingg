@@ -586,8 +586,25 @@ class UserDetailsScreen extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('$userName\'s Tests',
-              style: GoogleFonts.pacifico(fontSize: 24)),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: CircleBorder(),
+                padding: EdgeInsets.all(5),
+                elevation: 3,
+              ),
+              child: Icon(Icons.arrow_back, color: Colors.purple, size: 20),
+            ),
+          ),
+          title: Text(
+            '$userName\'s Tests',
+            style: GoogleFonts.pacifico(fontSize: 24, color: Colors.white,),
+          ),
           backgroundColor: Colors.purple,
           bottom: TabBar(
             tabs: [
@@ -595,7 +612,7 @@ class UserDetailsScreen extends StatelessWidget {
               Tab(text: '🟠 Medium'),
               Tab(text: '🔵 Hard'),
             ],
-            labelStyle: GoogleFonts.roboto(fontWeight: FontWeight.bold),
+            labelStyle: GoogleFonts.roboto(fontWeight: FontWeight.bold, color: Colors.white),
             indicatorColor: Colors.white,
           ),
         ),

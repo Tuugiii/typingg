@@ -192,7 +192,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
                   GaugeAnnotation(
                     widget: Text(
                       displayValue,
-                      style: GoogleFonts.notoSans(
+                      style: GoogleFonts.pacifico(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: color,
@@ -208,7 +208,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
         ),
         Text(
           label,
-          style: GoogleFonts.notoSans(
+          style: GoogleFonts.pacifico(
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: color,
@@ -217,62 +217,69 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       ],
     );
   }
-
+  // shiveh text biceq bhd saaral bicij ehlehd tod bld correct bvl nogn buruu bvl ulaan
   Widget _buildWordView() {
-    if (sampleWords.isEmpty) {
-      return Center(
-        child: Text(
-          'No challenge text available',
-          style: GoogleFonts.notoSans(
-            fontSize: 20,
-            color: Colors.grey,
-          ),
+  if (sampleWords.isEmpty) {
+    return Center(
+      child: Text(
+        'No challenge text available',
+        style: GoogleFonts.roboto(
+          fontSize: 20,
+          color: Colors.grey,
         ),
-      );
-    }
-
-    List<Widget> words = [];
-
-    for (int i = 0; i < sampleWords.length; i++) {
-      Color bgColor;
-      Color textColor = Colors.black;
-
-      if (i < currentIndex) {
-        bool isCorrect = correctness[i];
-        bgColor = isCorrect ? Colors.green.shade200 : Colors.red.shade200;
-      } else if (i == currentIndex) {
-        bgColor = Colors.blue.shade100;
-      } else {
-        bgColor = Colors.grey.shade200;
-        textColor = Colors.grey.shade500;
-      }
-
-      words.add(Container(
-        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        margin: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          sampleWords[i],
-          style: GoogleFonts.notoSans(
-            color: textColor,
-            fontSize: 14,
-            height: 1.5,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ));
-    }
-
-    return Wrap(
-      alignment: WrapAlignment.start,
-      spacing: 4,
-      runSpacing: 8,
-      children: words,
+      ),
     );
   }
+
+  List<Widget> words = [];
+
+  for (int i = 0; i < sampleWords.length; i++) {
+    Color bgColor = const Color(0xFFEFEFEF); // default саарал фон
+    Color textColor = Colors.grey.shade700;
+    FontWeight fontWeight = FontWeight.normal;
+    double fontSize = 15;
+
+    if (i == currentIndex) {
+      // ✨ Одоо бичиж буй үг — зураг шиг
+      bgColor = const Color(0xFFCCE4F7); // цэнхэр фон
+      textColor = Colors.black;
+      fontWeight = FontWeight.w900;
+      fontSize = 17;
+    } else if (i < currentIndex) {
+      // ✅ Аль хэдийн бичсэн үг — ногоон/улаан ялгах
+      bool isCorrect = correctness[i];
+      bgColor = isCorrect ? Colors.green.shade200 : Colors.red.shade200;
+      textColor = Colors.black;
+      fontWeight = FontWeight.w600;
+      fontSize = 16;
+    }
+
+    words.add(Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        sampleWords[i],
+        style: GoogleFonts.roboto(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: textColor,
+          letterSpacing: 0.2,
+        ),
+      ),
+    ));
+  }
+
+  return Wrap(
+    alignment: WrapAlignment.start,
+    spacing: 4,
+    runSpacing: 6,
+    children: words,
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -280,7 +287,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
       appBar: AppBar(
         title: Text(
           'Speed Typing Challenge',
-          style: GoogleFonts.notoSans(),
+          style: GoogleFonts.pacifico(),
         ),
       ),
       body: GestureDetector(
