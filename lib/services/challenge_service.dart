@@ -6,7 +6,7 @@ import '../include.dart';
 class ChallengeService {
   static String baseUrl = baseurl + 'text';
 
-  Future<List<Map<String, dynamic>>> getUserChallengeHistory() async {   // Хэрэглэгчийн сорилын түүхийг авах
+  Future<List<Map<String, dynamic>>> getUserChallengeHistory() async {   
     try {
         // Хэрэглэгчийн сорилын түүхийг авах
       final token = await AuthService.getToken();
@@ -22,11 +22,11 @@ class ChallengeService {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200) {          // 200 амжилттай хариу ирсэн бол JSON задлаад буцаана
         final List<dynamic> data = json.decode(response.body);         // Амжилттай ирсэн хариуг decode хийнэ
         return data.map((item) => item as Map<String, dynamic>).toList();
-      } else if (response.statusCode == 401) {
-        // Token expired or invalid
+      } else if (response.statusCode == 401) { 
+        // Token expired or invalid // hugaca dussn esvl huchinq
         await AuthService.logout();
         throw Exception('Session expired. Please login again.');
       } else {

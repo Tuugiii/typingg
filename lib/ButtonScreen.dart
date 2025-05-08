@@ -16,7 +16,6 @@ class _ButtonScreenState extends State<ButtonScreen> {
     ResultScreen(),
     TypingScoreScreen(),
     UserHistoryScreen(),
-    // StatisticsScreen(),
   ];
 
   @override

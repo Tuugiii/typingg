@@ -33,7 +33,7 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  String _selectedLanguage = "en";  //songoson hel
+  String _selectedLanguage = "en";    //songoson hel
   String _selectedGameMode = "Easy"; //Сонгосон тоглоомын горим
   List<int> _availableMinutes = []; //Сонгож болох минутууд
   int? _selectedMinute; // Сонгосон минут

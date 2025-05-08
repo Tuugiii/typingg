@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:diplooajil/include.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -68,6 +67,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       setState(() => isLoading = false);
     }
   }
+
 //  // 🟣 Хэрэглэгчийн профайл зургийг ачаална
   Future<void> _loadUserProfile() async {
     try {
@@ -80,6 +80,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       print('Error loading user profile: $e');
     }
   }
+
   // 🖼 Зураг сонгож профайл зураг шинэчлэх (web болон mobile)
   Future<void> _pickAndUploadImage() async {
     try {
@@ -145,6 +146,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       setState(() => isLoading = false);
     }
   }
+
   // 🟣 Хэрэглэгчийн сорилын түүхийг ачаалж list болгож хадгална
   Future<void> _loadChallengeHistory() async {
     try {
@@ -155,6 +157,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
         history = data
             .map((attempt) => {
                   'name': attempt['username'] ?? 'Unknown',
+                  'language': attempt['language'] ?? 'Unknown', //ymr hel songoson ni eng or mgl
                   'date': _formatDate(attempt['created_at']),
                   'duration':
                       '${(attempt['duration_seconds'] / 60).round()} Minutes',
@@ -175,6 +178,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       });
     }
   }
+
   // 🕓 Огноог форматлах функц
   String _formatDate(String? dateStr) {
     if (dateStr == null) return 'Unknown Date';
@@ -185,6 +189,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
       return 'Invalid Date';
     }
   }
+
   // 🚪 Гарах товч дарсан үед auth logout хийнэ
   Future<void> _handleLogout() async {
     try {
@@ -494,6 +499,11 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
                                                   18,
                                                   isNumber: true),
                                               _buildDetailRow(
+                                                '🗣 Language', 
+                                                item['language']!, 
+                                                Colors.deepPurple, 
+                                                16),
+                                              _buildDetailRow(
                                                   '📅 Date',
                                                   item['date']!,
                                                   Colors.black,
@@ -522,7 +532,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
                 ),
     );
   }
-
+// ene dr blhr details deer drd orohoor hrgdh textuudin design ugnu edr
   Widget _buildDetailRow(
       String label, String value, Color valueColor, double fontSize,
       {bool isNumber = false}) {
@@ -536,7 +546,7 @@ class _UserHistoryScreenState extends State<UserHistoryScreen> {
             style: GoogleFonts.lobster(
               fontWeight: FontWeight.bold,
               fontSize: fontSize,
-              color: Colors.deepPurple,
+              color: Colors.black,
             ),
           ),
           Container(
@@ -603,7 +613,17 @@ class UserDetailsScreen extends StatelessWidget {
           ),
           title: Text(
             '$userName\'s Tests',
-            style: GoogleFonts.pacifico(fontSize: 24, color: Colors.white,),
+            style: GoogleFonts.pacifico(
+              fontSize: 24,
+              //fontWeight: FontWeight.bold,
+              color: Colors.white,
+              // shadows: [
+              //   Shadow(
+              //     color: Colors.redAccent,
+              //     blurRadius: 10,
+              //   ),
+              // ],
+            ),
           ),
           backgroundColor: Colors.purple,
           bottom: TabBar(
@@ -612,7 +632,8 @@ class UserDetailsScreen extends StatelessWidget {
               Tab(text: '🟠 Medium'),
               Tab(text: '🔵 Hard'),
             ],
-            labelStyle: GoogleFonts.roboto(fontWeight: FontWeight.bold, color: Colors.white),
+            labelStyle: GoogleFonts.roboto(
+                fontWeight: FontWeight.bold, color: Colors.white),
             indicatorColor: Colors.white,
           ),
         ),
@@ -686,6 +707,7 @@ class UserDetailsScreen extends StatelessWidget {
                 _buildDetailRow(
                     '❌ Wrong Words', item['wrongWords']!, Colors.red),
                 _buildDetailRow('📅 Date', item['date']!, Colors.black),
+                _buildDetailRow('🗣 Language', item['language']!, Colors.deepPurple),
                 _buildDetailRow('⏳ Duration', item['duration']!, Colors.black),
               ],
             ),
@@ -695,6 +717,7 @@ class UserDetailsScreen extends StatelessWidget {
     );
   }
 
+// easy medium hard lu shiljj orj bga hesgiin design righword, wrong, date, durat
   Widget _buildDetailRow(String label, String value, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4),
@@ -704,8 +727,8 @@ class UserDetailsScreen extends StatelessWidget {
           Text(label,
               style: GoogleFonts.roboto(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.deepPurple)),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black)),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(

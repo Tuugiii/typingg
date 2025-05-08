@@ -4,13 +4,13 @@ from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):   # Хэрэглэгчийн профайл мэдээллийг сериализ хийж өгөх сериализер
-    profile_image_url = serializers.SerializerMethodField()      # Профайл зургийн линкийг динамикаар авах тусгай field
+class UserSerializer(serializers.ModelSerializer):                                                                   # Хэрэглэгчийн профайл мэдээллийг сериализ хийж өгөх сериализер
+    profile_image_url = serializers.SerializerMethodField()                                                           # Профайл зургийн линкийг динамикаар авах тусгай field
 
     class Meta:
-        model = User         # Аль model дээр сериализер ажиллахыг заана
-        fields = ('id', 'username', 'email', 'profile_image', 'profile_image_url')         # Сериализад орох талбарууд
-        read_only_fields = ('id', 'profile_image_url')         # Эдгээр талбаруудыг зөвхөн унших боломжтой
+        model = User                                                                                                 # Аль model дээр сериализер ажиллахыг заана
+        fields = ('id', 'username', 'email', 'profile_image', 'profile_image_url')                                   # Сериализад орох талбарууд
+        read_only_fields = ('id', 'profile_image_url')                                                                # Эдгээр талбаруудыг зөвхөн унших боломжтой
 
     def get_profile_image_url(self, obj):      # Профайл зургийн URL-г авах тусгай функц
         return obj.profile_image_url

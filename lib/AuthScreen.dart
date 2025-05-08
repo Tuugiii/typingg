@@ -212,7 +212,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             : Text(
                                 isLogin ? 'Нэвтрэх' : 'Бүртгүүлэх',
                                 style: const TextStyle(
-                                    color: Colors.white, fontSize: 18),
+                                    color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                       ),
                     ),

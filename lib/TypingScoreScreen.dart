@@ -48,7 +48,7 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
       });
     }
   }
-//Хэрэв Loading байвал
+//Хэрэв Loading байвал achaallj bna gd unshina
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -62,7 +62,7 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
         body: Center(child: Text('Error: $_error')),
       );
     }
-//Хэрэв Орлогдсон сорил байхгүй бол
+//Хэрэв sngsn сорил байхгүй бол
     if (_lastAttempt == null) {
       return Scaffold(
         body: Center(child: Text('No attempts found')),
@@ -158,8 +158,8 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
                 ),
                 SizedBox(height: 20),
                 ScoreCard(
-                  //Correct Keystrokes (Зөв бичигдсэн үсгийн тоо) 
-                  //10 зөв үг бичсэн → 10 × 5 = 50 зөв даралт (keystrokes)
+                  //Correct Keystrokes zuv tovch drltin too (Зөв бичигдсэн үсгийн тоо) 
+                  //10 зөв үг бичсэн → 10 × 5 = 50 зөв даралт (keystrokes) * 5 → нэг үгний дундаж уртыг 5 тэмдэгт гэж тооцсон байна
                     "Correct Keystrokes",
                     "${(_lastAttempt!['correct_word_count'] * 5).round()}",
                     Colors.deepPurple),
@@ -237,7 +237,7 @@ class _TypingScoreScreenState extends State<TypingScoreScreen> {
     );
   }
 }
-
+//  onoo hrulj bga hsgig
 class ScoreCard extends StatelessWidget {
   final String title;
   final String value;
@@ -279,7 +279,7 @@ class ScoreCard extends StatelessWidget {
                   title,
                   style: GoogleFonts.poppins(
                     fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w600,  //ene dr correct accuracy edrin onoog tod haruulah hesgig hjn
                     color: Colors.deepPurple.shade800,
                   ),
                 ),

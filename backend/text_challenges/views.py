@@ -110,42 +110,43 @@ from .models import Language, TextChallenge, ChallengeAttempt
 from .serializers import LanguageSerializer, TextChallengeSerializer, ChallengeAttemptSerializer
 import random
 
-# 👇 Одоо бүх CRUD үйлдлийг дэмжинэ (GET, POST, PUT, DELETE)
+# Одоо бүх CRUD үйлдлийг дэмжинэ (GET, POST, PUT, DELETE)
 class LanguageViewSet(viewsets.ModelViewSet):
-    queryset = Language.objects.filter(is_active=True)     # Зөвхөн идэвхтэй хэлнүүдийг харуулна
-    serializer_class = LanguageSerializer      # Хариу өгөгдлийг сериализад хийхэд энэ сериализерыг ашиглана
+    queryset = Language.objects.filter(is_active=True)                                                            # Зөвхөн идэвхтэй хэлнүүдийг харуулна
+    serializer_class = LanguageSerializer                                                                         # serializer_class: өгөгдлийг JSON болгож буцаах сериализер
 
 class TextChallengeViewSet(viewsets.ModelViewSet):
     serializer_class = TextChallengeSerializer
 
     def get_queryset(self):
         queryset = TextChallenge.objects.all()         # Бүх сорилуудыг эхлээд авна
-        difficulty = self.request.query_params.get('difficulty')         # Хэрэв query параметрт level байвал шүүнэ
+        difficulty = self.request.query_params.get('difficulty')         # query параметраар difficulty ирсэн бол шүүнэ (жишээ нь: easy, medium)
         if difficulty:
             queryset = queryset.filter(difficulty_level=difficulty.upper())
-        language = self.request.query_params.get('language')          # Хэрэв query параметрт language байвал шүүнэ
+        language = self.request.query_params.get('language')            # query параметраар хэлний код ирсэн бол тухайн хэлтэй сорилуудыг шүүнэ
         if language:
             queryset = queryset.filter(language__language_code=language)
         return queryset
 
-# Хэл бүр дээр хэдэн сорил, ямар түвшин, ямар хугацаатай сорил байгааг харуулна
+# == Хэл бүр дээр ямар төвшний, ямар хугацааны сорилууд байгааг харуулна ==
 class LanguageSummaryView(APIView):
     def get(self, request):
-        languages = Language.objects.filter(is_active=True)         # Идэвхтэй бүх хэлнүүдийг авна
+        languages = Language.objects.filter(is_active=True)                                                       # Идэвхтэй бүх хэлнүүдийг авна
         result = []
 
         for lang in languages:
             challenges = TextChallenge.objects.filter(language=lang)
-            levels = list(challenges.values_list('difficulty_level', flat=True).distinct())    # Ямар difficulty түвшин байгаа болохыг олно (давтагдаагүй)
-            formatted_levels = [level.capitalize() for level in levels]
-            minutes_by_level = {}             # Түвшин бүрээр хэдэн минутын сорилууд байгааг ялгаж хадгална
+            levels = list(challenges.values_list('difficulty_level', flat=True).distinct())                                 # Төвшнүүдийг (easy, medium, hard) давтагдаагүйгээр гаргана
+            formatted_levels = [level.capitalize() for level in levels]                                          # Төвшнүүдийг format хийнэ (EASY -> Easy гэх мэт)
+            
+            minutes_by_level = {}             # Төвшин бүр дээр хэдэн минутын сорилууд байгааг хадгална
             for level in levels:
-                challenges_by_level = challenges.filter(difficulty_level=level)
+                challenges_by_level = challenges.filter(difficulty_level=level)   # Тухайн төвшний сорилуудыг шүүнэ
                 if challenges_by_level.exists():
                     level_name = level.capitalize()
-                    unique_minutes = sorted(list(set(challenges_by_level.values_list('recommended_time', flat=True))))
-                    minutes_by_level[level_name] = unique_minutes
-
+                    unique_minutes = sorted(list(set(challenges_by_level.values_list('recommended_time', flat=True))))   # Давтагдахгүй recommended_time (минут)-үүдийг олно
+                    minutes_by_level[level_name] = unique_minutes                                           # тухайн төвшинд харгалзах хугацаануудыг хадгална
+ # helni medeellig neg dict blgj bucaah listd nemn
             lang_summary = {
                 "lang_name": lang.language_name,
                 "lang_code": lang.language_code,
@@ -154,25 +155,25 @@ class LanguageSummaryView(APIView):
             }
             result.append(lang_summary)
 
-        return Response(result)
+        return Response(result)  # Бүх хэлний мэдээллийг JSON хэлбэрээр буцаана
 
 # Санамсаргүй даалгавар буцаах API
 @api_view(['GET'])
-def get_random_challenge(request):
+def get_random_challenge(request):    # Query параметраас хэлний код болон төвшинг авна
     lang_code = request.query_params.get('lang_code')
     level = request.query_params.get('level')
     minutes = request.query_params.get('minutes')
 
-    if not lang_code or not level:
+    if not lang_code or not level:  # lang_code ба level заавал байх ёстой
         return Response(
             {"error": "lang_code and level are required parameters"},
             status=400
         )
 
-    query = Q(language__language_code=lang_code)
+    query = Q(language__language_code=lang_code)                                              # Q object ашиглаж шүүлт хийх query-гаа байгуулна
     query &= Q(difficulty_level=level.upper())
 
-    if minutes:
+    if minutes:                                                                                  # Хэрвээ минут өгөгдсөн бол integer болгоод query-д нэмнэ
         try:
             minutes = int(minutes)
             query &= Q(recommended_time=minutes)
@@ -182,28 +183,28 @@ def get_random_challenge(request):
                 status=400
             )
 
-    challenges = list(TextChallenge.objects.filter(query))
+    challenges = list(TextChallenge.objects.filter(query))    # Бүх тохирох сорилуудыг авна
 
-    if not challenges:
+    if not challenges:    # Хэрвээ тохирох сорил байхгүй бол error буцаана
         return Response(
             {"error": f"No challenges found for language '{lang_code}' with level '{level}'{f' and {minutes} minutes' if minutes else ''}"},
             status=404
         )
 
-    challenge = random.choice(challenges)     # Олдсон сорилуудаас нэгийг санамсаргүй сонгоно
-    serializer = TextChallengeSerializer(challenge)     # Сериализад хийгээд буцаана
+    challenge = random.choice(challenges)    # Тохирох сорилуудаас нэгийг санамсаргүй сонгоно
+    serializer = TextChallengeSerializer(challenge)     # Сериализад хийгээд json hlbereer буцаана
     return Response(serializer.data)
 
 
-# Хэрэглэгч сорилд оролцсон түүхийг CRUD хэлбэрээр удирдана
+# hereglegch sorild orolcson tuuh
 class ChallengeAttemptViewSet(viewsets.ModelViewSet):
     serializer_class = ChallengeAttemptSerializer
     permission_classes = [permissions.IsAuthenticated]     # Нэвтэрсэн хэрэглэгчдэд л зөвшөөрнө
 
-    # Зөвхөн тухайн хэрэглэгчийн оролцоо л харагдана
+    # Зөвхөн тухайн хэрэглэгчийн оролцсон түүхийг харуулна
     def get_queryset(self):
         return ChallengeAttempt.objects.filter(user=self.request.user)
 
-    # POST хийхэд user-ийг автоматаар онооно
+    # POST хийхэд user-ийг автоматаар онооно # Шинээр оролцоо нэмэхэд тухайн хэрэглэгчийг автоматаар онооно
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

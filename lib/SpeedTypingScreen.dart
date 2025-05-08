@@ -22,7 +22,7 @@ class SpeedTypingScreen extends StatefulWidget {
 
 class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
   final TextEditingController _textController = TextEditingController();
-  final ChallengeService _challengeService = ChallengeService();
+  final ChallengeService _challengeService = ChallengeService();  // API service
   Timer? _timer;
   int _timeLeft = 0;
   String _challengeText = '';
@@ -128,7 +128,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
 // Бичсэн үгийг шалгах
   void _handleWordTyped(String value) {
     if (value.endsWith(' ')) {
-      String typedWord = value.trim(); //одоо жижиг үсгээр хувиргахгүй
+      String typedWord = value.trim(); //одоо жижиг үсгээр хувиргахгүй jijig tom useg ylgana
       if (currentIndex < sampleWords.length) {
         bool isCorrect = typedWord == sampleWords[currentIndex];  //яг ижил бичсэн эсэхийг шалгана
         if (isCorrect) {
@@ -172,7 +172,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
   }
 
   Widget buildCircularGauge(
-      String label, double value, String displayValue, Color color) {
+      String label, double value, String displayValue, Color color) {  // ← 🟡 энэ өнгө параметрээр ирдэг
     return Column(
       children: [
         SizedBox(
@@ -192,10 +192,11 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
                 ],
                 pointers: [NeedlePointer(value: value)],
                 annotations: [
+                  // dugui ur dung hrulj bga hesgiin ungu hesgiig end zaaj ugjn
                   GaugeAnnotation(
                     widget: Text(
                       displayValue,
-                      style: GoogleFonts.pacifico(
+                      style: GoogleFonts.pacifico(  //ene dr blhr accurcacy wpm in huvi toonii font edrg zaajn
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: color,
@@ -209,6 +210,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
             ],
           ),
         ),
+        // Accuracy wpm error edrig bicsn textin design
         Text(
           label,
           style: GoogleFonts.pacifico(
@@ -239,17 +241,17 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
   for (int i = 0; i < sampleWords.length; i++) {
     Color bgColor = const Color(0xFFEFEFEF); // default саарал фон
     Color textColor = Colors.grey.shade700;
-    FontWeight fontWeight = FontWeight.bold;  //bivihs umnuh text bs tod bna
+    FontWeight fontWeight = FontWeight.bold;  //bivihs umnuh text bs tod bna trin end zaaj ugjin
     double fontSize = 15;
 
     if (i == currentIndex) {
       // ✨ Одоо бичиж буй үг — зураг шиг
-      bgColor = const Color(0xFFCCE4F7); // цэнхэр фон
+      bgColor = const Color(0xFFCCE4F7); // одоогийн үг: цэнхэр фон
       textColor = Colors.black;
       fontWeight = FontWeight.w900;
       fontSize = 17;
     } else if (i < currentIndex) {
-      // ✅ Аль хэдийн бичсэн үг — ногоон/улаан ялгах
+      // Аль хэдийн бичсэн үг — ногоон/улаан ялгах
       bool isCorrect = correctness[i];
       bgColor = isCorrect ? Colors.green.shade200 : Colors.red.shade200;
       textColor = Colors.black;
@@ -330,7 +332,7 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            buildCircularGauge("Accuracy", accuracy.toDouble(),
+                            buildCircularGauge("Accuracy", accuracy.toDouble(),  //"Accuracy" → Colors.orange gvl dursn c orange ungutei bld ner n c gsn dgd adilhn bln
                                 "$accuracy%", Colors.orange),
                             buildCircularGauge(
                                 "WPM", wpm.toDouble(), "$wpm", Colors.blue),
@@ -380,13 +382,14 @@ class _SpeedTypingScreenState extends State<SpeedTypingScreen> {
                           style: GoogleFonts.notoSans(
                             fontSize: 14,
                             height: 1.5,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w500, //ene n blhr start typing dr drd textee shivj bga hsgin font
                           ),
                           decoration: InputDecoration(
                             hintText: 'Start typing here...',
                             hintStyle: GoogleFonts.roboto(
                               color: Colors.grey[400],
                               fontSize: 14,
+                              
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
